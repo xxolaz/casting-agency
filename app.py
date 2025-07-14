@@ -1,13 +1,17 @@
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
-from models import setup_db, Movie, Actor
+from models import setup_db, Movie, Actor, db
 from auth import AuthError, requires_auth
+from flask_migrate import Migrate
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
     setup_db(app)
-    CORS(app) # Enable CORS for all routes
+    CORS(app)
+
+    # Initialize Flask-Migrate
+    migrate = Migrate(app, db)
 
     @app.route('/')
     def health_check():
@@ -18,9 +22,6 @@ def create_app(test_config=None):
     @requires_auth('get:actors')
     def get_actors(payload):
         actors = Actor.query.order_by(Actor.id).all()
-        if len(actors) == 0:
-            abort(404)
-
         return jsonify({
             'success': True,
             'actors': [actor.format() for actor in actors]
@@ -31,7 +32,7 @@ def create_app(test_config=None):
     def create_actor(payload):
         body = request.get_json()
         if not body or 'name' not in body or 'age' not in body or 'gender' not in body:
-            abort(400) # Bad Request
+            abort(400)
 
         new_actor = Actor(
             name=body.get('name'),
@@ -53,6 +54,9 @@ def create_app(test_config=None):
             abort(404)
 
         body = request.get_json()
+        if not body:
+            abort(400)
+            
         if 'name' in body:
             actor.name = body.get('name')
         if 'age' in body:
@@ -84,9 +88,6 @@ def create_app(test_config=None):
     @requires_auth('get:movies')
     def get_movies(payload):
         movies = Movie.query.order_by(Movie.id).all()
-        if len(movies) == 0:
-            abort(404)
-
         return jsonify({
             'success': True,
             'movies': [movie.format() for movie in movies]
@@ -97,7 +98,7 @@ def create_app(test_config=None):
     def create_movie(payload):
         body = request.get_json()
         if not body or 'title' not in body or 'release_date' not in body:
-            abort(400) # Bad Request
+            abort(400)
 
         new_movie = Movie(
             title=body.get('title'),
@@ -118,6 +119,9 @@ def create_app(test_config=None):
             abort(404)
 
         body = request.get_json()
+        if not body:
+            abort(400)
+
         if 'title' in body:
             movie.title = body.get('title')
         if 'release_date' in body:
