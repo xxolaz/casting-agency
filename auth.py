@@ -2,7 +2,7 @@ import os
 import json
 from functools import wraps
 from urllib.request import urlopen
-from flask import request, _request_ctx_stack
+from flask import request  # <-- CORRECTED: _request_ctx_stack removed
 from jose import jwt
 
 # --- Auth0 Configuration ---
@@ -55,7 +55,6 @@ def get_token_auth_header():
 def check_permissions(permission, payload):
     """Checks if the required permission is in the JWT payload
     """
-    
     if 'scope' not in payload:
         raise AuthError({
             'code': 'invalid_claims',
@@ -78,8 +77,10 @@ def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
     
+    # Get the data in the header
     unverified_header = jwt.get_unverified_header(token)
     
+    # Choose our key
     rsa_key = {}
     if 'kid' not in unverified_header:
         raise AuthError({
