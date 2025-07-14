@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
-from models import setup_db, Movie, Actor, db # Import the db instance
 from auth import AuthError, requires_auth
 from flask_migrate import Migrate # Import Migrate
 
